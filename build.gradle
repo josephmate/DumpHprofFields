@@ -18,9 +18,10 @@ plugins {
 mainClassName = 'App'
 
 dependencies {
-	// This dependency is found on compile classpath of this component and consumers.
-	compile 'com.google.guava:guava:23.0'
-	compile 'org.netbeans.modules:org-netbeans-lib-profiler:RELEASE74'
+	// https://mvnrepository.com/artifact/args4j/args4j
+	compile group: 'args4j', name: 'args4j', version: '2.33'
+
+	compile 'org.netbeans.modules:org-netbeans-lib-profiler:RELEASE82'
 	
 
 	// Use JUnit test framework
@@ -35,5 +36,11 @@ repositories {
 	maven {
 		url 'http://bits.netbeans.org/maven2'
 	}
+}
+
+apply plugin: 'eclipse'
+
+task printcp(type:JavaExec) {
+   println sourceSets.main.runtimeClasspath
 }
 
