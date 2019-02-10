@@ -38,43 +38,84 @@ public class App {
 	    Heap heap = HeapFactory.createHeap(new File(hprofPath));
 	    
 	    JavaClass javaClass = heap.getJavaClassByName(classToDump);
-	    // unfortunately, the library does not use a generic
+	    
+	    boolean needToWriteHeader = !disableHeader;
+	    
+	    // Unfortunately, the library does not use a generic
 	    // but the javadoc guarentees it's a List on Instance. This also prevent us from inline
 	    // the statement in the loop.
-	    boolean needToWriteHeader = !disableHeader;
 	    @SuppressWarnings("unchecked")  
 		List<Instance> instances = javaClass.getInstances();
 	    for(Instance instance : instances) {
-	    	boolean first;
-	    	
 	    	@SuppressWarnings("unchecked") // same deal here
 	    	List<FieldValue> fields = instance.getFieldValues();
 	    	if(needToWriteHeader) {
-	    		first = true;
-		    	for(FieldValue field : fields) {
-		    		if(!first) {
-		    			System.out.print(delimeter);
-		    		}
-		    		
-		    		System.out.print(field.getField().getName());
-		    		
-		    		first = false;
-		    	}
-		    	System.out.println();
-		    	needToWriteHeader = false;
+	    		writeHeader(heap, fields);
+	        	needToWriteHeader = false;
 	    	}
 	    	
-    		first = true;
-	    	for(FieldValue field : fields) {
-	    		if(!first) {
-	    			System.out.print(delimeter);
-	    		}
-	    		
-	    		System.out.print(field.getValue());
-	    		
-	    		first = false;
-	    	}
-	    	System.out.println();
+	    	writeFields(heap, fields);
 	    }
+    }
+    
+    private void writeHeader(Heap heap, List<FieldValue> fields) {
+		boolean first = true;
+    	for(FieldValue field : fields) {
+    		if(!first) {
+    			System.out.print(delimeter);
+    		}
+    		
+    		if ("object".equals(field.getField().getType().getName())) {
+    			Instance fieldInstance =getInstanceFromFieldValue(field);
+    			System.out.print(fieldInstance.getJavaClass().getName());
+    		} else {
+    			System.out.print(field.getField().getType().getName());
+    		}
+    		System.out.print(":");
+    		System.out.print(field.getField().getName());
+    		
+    		first = false;
+    	}
+    	System.out.println();
+    }
+    
+    private void writeFields(Heap heap, List<FieldValue> fields) {
+    	boolean first = true;
+    	for(FieldValue field : fields) {
+    		if(!first) {
+    			System.out.print(delimeter);
+    		}
+
+    		printFieldValue(heap, field);
+    		
+    		first = false;
+    	}
+    	System.out.println();
+    }
+    
+    private void printFieldValue(Heap heap, FieldValue field) {
+    	if ("object".equals(field.getField().getType().getName())) {
+			Instance fieldInstance = getInstanceFromFieldValue(field);
+			if("java.lang.String".equals(fieldInstance.getJavaClass().getName())) {
+				System.out.print(extractString(fieldInstance));
+			} else {
+	    		System.out.print(field.getField().getDeclaringClass().getName() + ":");
+				System.out.print(field.getValue());
+			}
+		} else { // primitive types
+			System.out.print(field.getValue());
+		}
+    }
+    
+    private String extractString(Instance stringInstance) {
+    	return "";
+    }
+    
+    private Instance getInstanceFromFieldValue(FieldValue fieldValue) {
+    	return ((ObjectFieldValue)fieldValue).getInstance();
+    }
+    
+    private Instance getInstanceFromFieldValueOldMethod(Heap heap, FieldValue fieldValue) {
+    	return  heap.getInstanceByID(Long.parseLong(fieldValue.getValue()));
     }
 }
