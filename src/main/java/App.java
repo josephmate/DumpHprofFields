@@ -107,8 +107,26 @@ public class App {
 		}
     }
     
+    /**
+     * public final class String implements java.io.Serializable, Comparable<String>, CharSequence {
+     *     private final char value[];
+     * https://hg.openjdk.java.net/jdk8/jdk8/jdk/file/687fd7c7986d/src/share/classes/java/lang/String.java
+     * @param stringInstance
+     * @return
+     */
     private String extractString(Instance stringInstance) {
-    	return "";
+    	// stringInstance.getValueOfField("value") returns a PrimitiveArrayDump which implements PrimitiveArrayInstance
+    	PrimitiveArrayInstance stringsValueField = (PrimitiveArrayInstance)stringInstance.getValueOfField("value");
+    	// stringsValueField.getValues() returns [49, 48]
+    	//     I'm guessing these are the base 10 byte values of the characters.
+    	// TODO: check if this still works with UTF-16 characters. currently only testing with ASCII subset
+    	@SuppressWarnings("unchecked")
+		List<String> characterBytesAsStrings = stringsValueField.getValues();
+    	StringBuilder builder = new StringBuilder();
+    	for(String characterBytesAsString : characterBytesAsStrings) {
+    		builder.append(Character.forDigit(Integer.parseInt(characterBytesAsString), 10));
+    	}
+    	return builder.toString();
     }
     
     private Instance getInstanceFromFieldValue(FieldValue fieldValue) {
