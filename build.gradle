@@ -11,6 +11,10 @@ version = '1.0'
 // Define the main class for the application
 mainClassName = 'App'
 
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
 //create a single Jar with all dependencies
 task fatJar(type: Jar) {
 	manifest {
